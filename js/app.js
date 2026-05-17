@@ -663,17 +663,11 @@ class TimelineView {
     const details = cardEl.querySelector('.card__details');
     if (!details) return;
 
-    if (this._expandedCard && this._expandedCard !== cardEl) {
-      const prev = this._expandedCard;
-      this._collapseInstant(prev);
-    }
-
     cardEl.classList.add('card--expanded');
     cardEl.classList.remove('card--transition-done');
     details.setAttribute('aria-expanded', 'true');
     details.style.maxHeight = details.scrollHeight + 'px';
 
-    this._expandedCard = cardEl;
     this._setupDetailListeners(cardEl);
 
     const onDone = (e) => {
@@ -683,58 +677,16 @@ class TimelineView {
       details.style.maxHeight = details.scrollHeight + 'px';
     };
     details.addEventListener('transitionend', onDone);
-
-    requestAnimationFrame(() => {
-      const isMobile = window.innerWidth <= 768;
-      cardEl.scrollIntoView({ behavior: 'smooth', block: isMobile ? 'start' : 'nearest' });
-    });
   }
 
   collapseCard(cardEl) {
     const details = cardEl.querySelector('.card__details');
     if (!details) return;
 
-    const cardRect = cardEl.getBoundingClientRect();
-    const collapseHeight = details.scrollHeight;
-
     cardEl.classList.remove('card--expanded');
     cardEl.classList.remove('card--transition-done');
     details.setAttribute('aria-expanded', 'false');
     details.style.maxHeight = '0';
-
-    if (cardRect.top < 0 && collapseHeight > 0) {
-      window.scrollBy(0, -collapseHeight);
-    }
-
-    if (this._expandedCard === cardEl) {
-      this._expandedCard = null;
-    }
-  }
-
-  _collapseInstant(cardEl) {
-    const details = cardEl.querySelector('.card__details');
-    if (!details) return;
-
-    const cardRect = cardEl.getBoundingClientRect();
-    const collapseHeight = details.scrollHeight;
-
-    details.style.transition = 'none';
-    details.style.maxHeight = '0';
-    cardEl.classList.remove('card--expanded');
-    cardEl.classList.remove('card--transition-done');
-    details.setAttribute('aria-expanded', 'false');
-
-    if (cardRect.top < 0 && collapseHeight > 0) {
-      window.scrollBy(0, -collapseHeight);
-    }
-
-    requestAnimationFrame(() => {
-      details.style.transition = '';
-    });
-
-    if (this._expandedCard === cardEl) {
-      this._expandedCard = null;
-    }
   }
 
   collapseAll() {
