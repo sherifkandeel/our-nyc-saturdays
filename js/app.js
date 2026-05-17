@@ -660,29 +660,46 @@ class TimelineView {
   }
 
   expandCard(cardEl) {
-    // Collapse any other expanded card first
-    if (this._expandedCard && this._expandedCard !== cardEl) {
-      this.collapseCard(this._expandedCard);
-    }
-
     const details = cardEl.querySelector('.card__details');
     if (!details) return;
 
-    cardEl.classList.add('card--expanded');
-    details.setAttribute('aria-expanded', 'true');
-    details.style.maxHeight = details.scrollHeight + 'px';
-
-    this._expandedCard = cardEl;
-
-    // Set up event listeners for detail panel buttons
-    this._setupDetailListeners(cardEl);
-
-    // Scroll into view
-    setTimeout(() => {
-      cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      // Recalculate max-height after content may have changed
+    const doExpand = () => {
+      cardEl.classList.add('card--expanded');
+      cardEl.classList.remove('card--transition-done');
+      details.setAttribute('aria-expanded', 'true');
       details.style.maxHeight = details.scrollHeight + 'px';
-    }, 100);
+
+      this._expandedCard = cardEl;
+      this._setupDetailListeners(cardEl);
+
+      const onTransitionEnd = (e) => {
+        if (e.propertyName !== 'max-height') return;
+        details.removeEventListener('transitionend', onTransitionEnd);
+        cardEl.classList.add('card--transition-done');
+        details.style.maxHeight = details.scrollHeight + 'px';
+        const isMobile = window.innerWidth <= 768;
+        cardEl.scrollIntoView({ behavior: 'smooth', block: isMobile ? 'start' : 'nearest' });
+      };
+      details.addEventListener('transitionend', onTransitionEnd);
+    };
+
+    if (this._expandedCard && this._expandedCard !== cardEl) {
+      const prev = this._expandedCard;
+      const prevDetails = prev.querySelector('.card__details');
+      this.collapseCard(prev);
+      if (prevDetails) {
+        const onCollapsed = (e) => {
+          if (e.propertyName !== 'max-height') return;
+          prevDetails.removeEventListener('transitionend', onCollapsed);
+          doExpand();
+        };
+        prevDetails.addEventListener('transitionend', onCollapsed);
+      } else {
+        doExpand();
+      }
+    } else {
+      doExpand();
+    }
   }
 
   collapseCard(cardEl) {
@@ -690,6 +707,7 @@ class TimelineView {
     if (!details) return;
 
     cardEl.classList.remove('card--expanded');
+    cardEl.classList.remove('card--transition-done');
     details.setAttribute('aria-expanded', 'false');
     details.style.maxHeight = '0';
 

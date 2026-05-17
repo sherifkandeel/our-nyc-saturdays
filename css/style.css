@@ -65,7 +65,6 @@
 }
 
 html {
-  scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   font-size: 16px;
@@ -1008,10 +1007,11 @@ ul, ol {
 .card__details {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.4s ease;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: max-height;
 }
 
-.card--expanded .card__details {
+.card--transition-done .card__details {
   overflow: visible;
 }
 
